@@ -1,0 +1,51 @@
+#!/bin/sh
+
+set -eu
+
+printf 'LSP command name (for example, rust-analyzer): '
+IFS= read -r command_name
+
+case "$command_name" in
+  ''|*[!A-Za-z0-9._+-]*)
+    printf 'error: command name must contain only letters, digits, ., _, +, or -\n' >&2
+    exit 1
+    ;;
+esac
+
+printf 'Absolute path to the LSP executable: '
+IFS= read -r executable_path
+
+case "$executable_path" in
+  /*) ;;
+  *)
+    printf 'error: executable path must be absolute\n' >&2
+    exit 1
+    ;;
+esac
+
+if [ ! -f "$executable_path" ] || [ ! -x "$executable_path" ]; then
+  printf 'error: target is not an executable file: %s\n' "$executable_path" >&2
+  exit 1
+fi
+
+link_dir=${HOME:?HOME is not set}/.local/bin
+link_path=$link_dir/$command_name
+
+if [ -e "$link_path" ] || [ -L "$link_path" ]; then
+  printf 'error: destination already exists: %s\n' "$link_path" >&2
+  exit 1
+fi
+
+if existing_path=$(command -v "$command_name" 2>/dev/null); then
+  printf 'error: command already exists on PATH: %s\n' "$existing_path" >&2
+  exit 1
+fi
+
+mkdir -p "$link_dir"
+ln -s "$executable_path" "$link_path"
+
+printf 'created %s -> %s\n' "$link_path" "$executable_path"
+case ":${PATH:-}:" in
+  *:"$link_dir":*) ;;
+  *) printf 'note: add %s to PATH before starting Neovim\n' "$link_dir" ;;
+esac

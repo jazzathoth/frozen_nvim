@@ -1,0 +1,6 @@
+/test_home/
+/.local/
+/.artifacts/
+*.swp
+.codex/
+joes_old_diy_nvim/

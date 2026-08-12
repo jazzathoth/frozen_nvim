@@ -1,0 +1,6 @@
+require("frozen.options")
+require("frozen.languages.python")
+require("frozen.diagnostics")
+require("frozen.keymaps")
+require("frozen.autocmds")
+require("frozen.lazy")

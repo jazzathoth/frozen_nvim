@@ -1,0 +1,57 @@
+#!/bin/sh
+set -eu
+
+repo_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+case ${1:-} in
+  "")
+    user_home=${HOME:?HOME is not set}
+    config_home=${XDG_CONFIG_HOME:-"$user_home/.config"}
+    backup_root="${XDG_CACHE_HOME:-"$user_home/.cache"}/frozen-nvim/config-backups"
+    require_marker=true
+    ;;
+  --test)
+    config_home="$repo_dir/test_home/.config"
+    backup_root="$repo_dir/.artifacts/config-backups"
+    require_marker=false
+    ;;
+  -h|--help)
+    printf '%s\n' "usage: ./bin/sync-config [--test]"
+    exit 0
+    ;;
+  *)
+    printf '%s\n' "usage: ./bin/sync-config [--test]" >&2
+    exit 2
+    ;;
+esac
+[ $# -le 1 ] || { printf '%s\n' "usage: ./bin/sync-config [--test]" >&2; exit 2; }
+
+config_dir="$config_home/nvim"
+source_dir="$repo_dir/config/nvim"
+
+[ -f "$source_dir/.frozen-nvim-managed" ] || {
+  printf '%s\n' "error: repository source marker is missing" >&2
+  exit 1
+}
+if [ "$require_marker" = true ]; then
+  [ -f "$config_dir/.frozen-nvim-managed" ] || {
+    printf '%s\n' "error: $config_dir is not marked as managed by this repository" >&2
+    exit 1
+  }
+else
+  [ -d "$config_dir" ] || { printf '%s\n' "error: test config does not exist: $config_dir" >&2; exit 1; }
+fi
+
+timestamp=$(date +%Y%m%d-%H%M%S)
+backup_dir="$backup_root/nvim-$timestamp"
+stage_dir="$config_home/.nvim-frozen-stage-$$"
+
+[ ! -e "$backup_dir" ] || { printf '%s\n' "error: backup path already exists: $backup_dir" >&2; exit 1; }
+[ ! -e "$stage_dir" ] || { printf '%s\n' "error: staging path already exists: $stage_dir" >&2; exit 1; }
+
+mkdir -p "$backup_root" "$stage_dir"
+cp -R "$source_dir/." "$stage_dir/"
+mv "$config_dir" "$backup_dir"
+mv "$stage_dir" "$config_dir"
+
+printf '%s\n' "deployed $source_dir"
+printf '%s\n' "previous config backed up to $backup_dir"

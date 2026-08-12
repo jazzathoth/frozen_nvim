@@ -1,0 +1,25 @@
+#!/bin/sh
+set -eu
+
+repo_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+test_home="$repo_dir/test_home"
+
+# Wayland clients need the session runtime directory to find its display socket.
+# Preserve it for the clipboard provider before isolating Neovim's own runtime.
+if [ -n "${XDG_RUNTIME_DIR:-}" ]; then
+  export FROZEN_NVIM_HOST_XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR"
+fi
+
+export HOME="$test_home"
+export XDG_CONFIG_HOME="$test_home/.config"
+export XDG_DATA_HOME="$test_home/.local/share"
+export XDG_STATE_HOME="$test_home/.local/state"
+export XDG_CACHE_HOME="$test_home/.cache"
+export XDG_RUNTIME_DIR="$test_home/.local/run"
+export PATH="$test_home/.local/bin:$PATH"
+export NVIM_APPNAME=nvim
+
+mkdir -p "$XDG_RUNTIME_DIR"
+chmod 700 "$XDG_RUNTIME_DIR"
+
+exec "$test_home/.local/nvim-linux-x86_64/bin/nvim" "$@"
