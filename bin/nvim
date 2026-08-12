@@ -22,4 +22,4 @@ export NVIM_APPNAME=nvim
 mkdir -p "$XDG_RUNTIME_DIR"
 chmod 700 "$XDG_RUNTIME_DIR"
 
-exec "$test_home/.local/nvim-linux-x86_64/bin/nvim" "$@"
+exec "$test_home/.local/bin/nvim" "$@"

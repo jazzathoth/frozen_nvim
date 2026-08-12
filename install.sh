@@ -40,11 +40,16 @@ data_dir="$data_home/nvim"
 state_dir="$state_home/nvim"
 cache_dir="$cache_home/nvim"
 download_dir="$cache_home/frozen-nvim/downloads"
-tools_dir="$data_dir/frozen-nvim/bin"
+private_dir="$data_dir/frozen-nvim"
+runtime_bin_dir="$private_dir/runtime-bin"
+install_bin_dir="$private_dir/install-bin"
+metadata_dir="$private_dir/metadata"
 nvim_bin="$local_dir/bin/nvim"
 nvim_lib_dir="$local_dir/lib/nvim"
 nvim_stage_parent="$cache_home/frozen-nvim/staging/neovim-$NEOVIM_VERSION"
 nvim_stage="$nvim_stage_parent/nvim-linux-x86_64"
+install_manifest="$metadata_dir/neovim-files.manifest"
+install_marker="$metadata_dir/installation.env"
 
 printf '%s\n' "installation destinations:"
 printf '  %-10s %s\n' "binary:" "$nvim_bin"
@@ -73,19 +78,6 @@ fi
 managed_config=false
 if [ -f "$config_dir/.frozen-nvim-managed" ]; then
   managed_config=true
-fi
-
-tree_sitter_ready=false
-if [ -x "$local_dir/bin/tree-sitter" ]; then
-  existing_ts=$($local_dir/bin/tree-sitter --version | awk '{print $2}')
-  if [ "$managed_config" != true ] || [ "$existing_ts" != "$TREE_SITTER_VERSION" ]; then
-    printf '%s\n' "error: a different tree-sitter already exists at $local_dir/bin/tree-sitter" >&2
-    exit 1
-  fi
-  tree_sitter_ready=true
-elif [ -e "$local_dir/bin/tree-sitter" ] || [ -L "$local_dir/bin/tree-sitter" ]; then
-  printf '%s\n' "error: $local_dir/bin/tree-sitter already exists and is not executable" >&2
-  exit 1
 fi
 
 old_nvim_files=false
@@ -122,7 +114,7 @@ if [ "$old_nvim_files" = true ]; then
   done
 fi
 
-mkdir -p "$download_dir" "$local_dir/bin" "$tools_dir" "$data_dir/lazy" "$state_dir" "$cache_dir"
+mkdir -p "$download_dir" "$local_dir/bin" "$runtime_bin_dir" "$install_bin_dir" "$metadata_dir" "$data_dir/lazy" "$state_dir" "$cache_dir"
 
 fetch() {
   url=$1
@@ -152,20 +144,30 @@ else
   tar -xzf "$nvim_archive" -C "$nvim_stage_parent"
 fi
 
+# Record the exact official-release payload and refuse to overwrite any
+# pre-existing file in the ~/.local prefix.
+find "$nvim_stage" \( -type f -o -type l \) -print \
+  | sed "s|^$nvim_stage/||" \
+  | LC_ALL=C sort > "$install_manifest"
+while IFS= read -r relative; do
+  if [ -e "$local_dir/$relative" ] || [ -L "$local_dir/$relative" ]; then
+    printf '%s\n' "error: official Neovim payload would overwrite $local_dir/$relative" >&2
+    exit 1
+  fi
+done < "$install_manifest"
+
 ts_archive="$download_dir/tree-sitter-linux-x64-$TREE_SITTER_VERSION.gz"
 fetch "https://github.com/tree-sitter/tree-sitter/releases/download/v$TREE_SITTER_VERSION/tree-sitter-linux-x64.gz" "$ts_archive" "$TREE_SITTER_LINUX_X86_64_SHA256"
-if [ "$tree_sitter_ready" != true ]; then
-  gzip -dc "$ts_archive" > "$local_dir/bin/tree-sitter.part"
-  chmod 755 "$local_dir/bin/tree-sitter.part"
-  mv "$local_dir/bin/tree-sitter.part" "$local_dir/bin/tree-sitter"
-fi
+gzip -dc "$ts_archive" > "$install_bin_dir/tree-sitter.part"
+chmod 755 "$install_bin_dir/tree-sitter.part"
+mv "$install_bin_dir/tree-sitter.part" "$install_bin_dir/tree-sitter"
 
 ripgrep_archive="$download_dir/ripgrep-$RIPGREP_VERSION-x86_64-unknown-linux-musl.tar.gz"
 fetch "https://github.com/BurntSushi/ripgrep/releases/download/$RIPGREP_VERSION/ripgrep-$RIPGREP_VERSION-x86_64-unknown-linux-musl.tar.gz" \
   "$ripgrep_archive" "$RIPGREP_LINUX_X86_64_MUSL_SHA256"
-tar -xzf "$ripgrep_archive" -C "$tools_dir" --strip-components=1 \
+tar -xzf "$ripgrep_archive" -C "$runtime_bin_dir" --strip-components=1 \
   "ripgrep-$RIPGREP_VERSION-x86_64-unknown-linux-musl/rg"
-chmod 755 "$tools_dir/rg"
+chmod 755 "$runtime_bin_dir/rg"
 
 mkdir -p "$config_dir"
 cp -R "$repo_dir/config/nvim/." "$config_dir/"
@@ -189,7 +191,7 @@ XDG_DATA_HOME="$data_home" \
 XDG_STATE_HOME="$state_home" \
 XDG_CACHE_HOME="$cache_home" \
 XDG_RUNTIME_DIR="$runtime_dir" \
-PATH="$local_dir/bin:$PATH" \
+PATH="$install_bin_dir:$PATH" \
 NVIM_APPNAME=nvim \
   "$nvim_stage/bin/nvim" --headless "+lua dofile('$config_dir/lua/frozen/install_parsers.lua')" +qa
 
@@ -197,6 +199,7 @@ NVIM_APPNAME=nvim \
 # step succeeds. This places the real executable at ~/.local/bin/nvim while
 # keeping its lib/ and share/ runtime files in the standard prefix layout.
 cp -R "$nvim_stage/." "$local_dir/"
+printf 'NEOVIM_VERSION=%s\n' "$NEOVIM_VERSION" > "$install_marker"
 
 printf '\n%s\n' "installed frozen Neovim $NEOVIM_VERSION"
 printf '%s\n' "binary: $nvim_bin"

@@ -1,3 +1,4 @@
+require("frozen.tools")
 require("frozen.options")
 require("frozen.languages.python")
 require("frozen.diagnostics")

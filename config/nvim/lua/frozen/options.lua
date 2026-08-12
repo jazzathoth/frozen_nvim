@@ -1,11 +1,6 @@
 vim.g.mapleader = "\\"
 vim.g.maplocalleader = "\\"
 
--- Tools bundled for this configuration take precedence only inside Neovim.
--- This does not alter the parent shell or shadow distro tools system-wide.
-local bundled_tools = vim.fn.stdpath("data") .. "/frozen-nvim/bin"
-vim.env.PATH = bundled_tools .. ":" .. (vim.env.PATH or "")
-
 local opt = vim.opt
 
 -- Use the desktop clipboard only when a matching display and provider exist.

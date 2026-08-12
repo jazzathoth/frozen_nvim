@@ -8,7 +8,7 @@ return {
     opts = {
       enabledEngines = { "ripgrep" },
       engines = {
-        ripgrep = { path = vim.fn.stdpath("data") .. "/frozen-nvim/bin/rg" },
+        ripgrep = { path = vim.fn.stdpath("data") .. "/frozen-nvim/runtime-bin/rg" },
       },
     },
   }),

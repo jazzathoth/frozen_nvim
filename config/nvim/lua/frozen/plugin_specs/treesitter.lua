@@ -10,7 +10,11 @@ return {
       require("nvim-treesitter").setup(opts)
       vim.api.nvim_create_autocmd("FileType", {
         group = vim.api.nvim_create_augroup("frozen_treesitter", { clear = true }),
-        pattern = { "bash", "c", "cpp", "html", "javascript", "json", "kotlin", "lua", "markdown", "python", "rust", "typescript", "yaml" },
+        pattern = {
+          "bash", "c", "cpp", "dart", "dtd", "html", "javascript", "json",
+          "kotlin", "lua", "markdown", "python", "rust", "toml", "typescript",
+          "xml", "yaml",
+        },
         callback = function(event)
           pcall(vim.treesitter.start, event.buf)
         end,

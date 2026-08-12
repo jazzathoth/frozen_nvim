@@ -50,9 +50,23 @@ installed copy, run:
 The command accepts only an installation marked as managed by this repository,
 backs up the previous complete config under the XDG cache directory, and then
 deploys an exact replacement. Use `./bin/sync-config --test` to refresh the
-isolated test copy. Plugin commits or parser changes may additionally require
-running the installer logic; config sync deliberately changes configuration
-only.
+isolated test copy. Config sync deliberately changes configuration only.
+
+When adding a plugin or changing a pinned plugin commit, synchronize the plugin
+checkouts before deploying the matching configuration:
+
+```sh
+./bin/sync-plugins
+./bin/sync-config
+./verify.sh
+```
+
+Use `--test` with both synchronization commands for the isolated test copy.
+`sync-plugins` reads the repository's authoritative manifest and fetches only
+the exact commits recorded there. It does not run Lazy update or select newer
+versions. Parser-list changes still require the parser installation procedure.
+These synchronization commands are development tools, not the distribution
+mechanism for a frozen release.
 
 ## Frozen components
 
@@ -63,6 +77,43 @@ only.
 - lazy.nvim at an immutable commit
 - every prototype plugin URL and immutable commit in `config/nvim/lua/frozen/plugins.lua`
 - blink.cmp v1.10.2 and its verified prebuilt x86-64 GNU/Linux fuzzy matcher
+
+The external tools are private and separated by when they are needed:
+
+```text
+~/.local/share/nvim/frozen-nvim/
+├── runtime-bin/rg
+└── install-bin/tree-sitter
+```
+
+`lua/frozen/tools.lua` prepends `runtime-bin` only to Neovim's process
+environment, so plugins find the pinned `rg`. Child processes, including
+`:terminal`, inherit that private `rg`; the parent shell does not. The installer
+temporarily exposes `install-bin` only while compiling parsers, so the private
+Tree-sitter CLI is not visible during normal Neovim use. Neither tool can
+satisfy or conflict with RPM/deb package dependencies. Blink's matcher and the
+compiled parsers are shared libraries loaded directly and never enter `PATH`.
+
+## Uninstall
+
+```sh
+./uninstall.sh
+```
+
+The installer records every file merged from the official Neovim archive.
+The uninstaller requires that ownership manifest and removes only those files,
+plus this installation's plugins, parsers, private tools, and installer cache.
+It also removes the installer's private runtime state. It retains configuration,
+unrelated Neovim data, Neovim state, and Neovim cache by default.
+To remove all Neovim configuration/data/state/cache too:
+
+```sh
+./uninstall.sh --purge
+```
+
+Purge refuses a configuration without this repository's ownership marker.
+Timestamped directories created by `--backup-config` are never deleted or
+automatically restored.
 
 The checksums in `versions.env` are published by the respective GitHub releases. Plugin source archives are not yet vendored, so a first install still requires GitHub availability.
 

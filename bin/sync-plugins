@@ -1,0 +1,50 @@
+#!/bin/sh
+set -eu
+
+repo_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+
+case ${1:-} in
+  "")
+    user_home=${HOME:?HOME is not set}
+    config_home=${XDG_CONFIG_HOME:-"$user_home/.config"}
+    data_home=${XDG_DATA_HOME:-"$user_home/.local/share"}
+    nvim_bin="$user_home/.local/bin/nvim"
+    ;;
+  --test)
+    user_home="$repo_dir/test_home"
+    config_home="$user_home/.config"
+    data_home="$user_home/.local/share"
+    nvim_bin="$user_home/.local/bin/nvim"
+    ;;
+  -h|--help)
+    printf '%s\n' "usage: ./bin/sync-plugins [--test]"
+    exit 0
+    ;;
+  *)
+    printf '%s\n' "usage: ./bin/sync-plugins [--test]" >&2
+    exit 2
+    ;;
+esac
+[ $# -le 1 ] || { printf '%s\n' "usage: ./bin/sync-plugins [--test]" >&2; exit 2; }
+
+config_dir="$config_home/nvim"
+plugin_dir="$data_home/nvim/lazy"
+
+[ -f "$config_dir/.frozen-nvim-managed" ] || {
+  printf '%s\n' "error: $config_dir is not marked as managed by this repository" >&2
+  exit 1
+}
+[ -x "$nvim_bin" ] || {
+  printf '%s\n' "error: installed Neovim binary is missing: $nvim_bin" >&2
+  exit 1
+}
+command -v git >/dev/null 2>&1 || {
+  printf '%s\n' "error: required command is missing: git" >&2
+  exit 1
+}
+
+"$nvim_bin" --clean --headless \
+  -l "$repo_dir/scripts/install_plugins.lua" "$plugin_dir"
+
+printf '%s\n' "synchronized pinned plugins in $plugin_dir"
+printf '%s\n' "run ./bin/sync-config${1:+ $1} next if configuration also changed"

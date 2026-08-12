@@ -23,7 +23,7 @@ case ${1:-} in
     cache_home="$user_home/.cache"
     local_dir="$user_home/.local"
     nvim_cmd="$repo_dir/bin/nvim"
-    nvim_bin="$local_dir/nvim-linux-x86_64/bin/nvim"
+    nvim_bin="$local_dir/bin/nvim"
     ;;
   -h|--help)
     printf '%s\n' "usage: ./verify.sh [--test]"
@@ -38,8 +38,10 @@ esac
 
 config_dir="$config_home/nvim"
 data_dir="$data_home/nvim"
-tree_sitter_bin="$local_dir/bin/tree-sitter"
-ripgrep_bin="$data_dir/frozen-nvim/bin/rg"
+tree_sitter_bin="$data_dir/frozen-nvim/install-bin/tree-sitter"
+ripgrep_bin="$data_dir/frozen-nvim/runtime-bin/rg"
+install_manifest="$data_dir/frozen-nvim/metadata/neovim-files.manifest"
+install_marker="$data_dir/frozen-nvim/metadata/installation.env"
 blink_fuzzy="$data_dir/lazy/blink.cmp/target/release/libblink_cmp_fuzzy.so"
 download_dir="$cache_home/frozen-nvim/downloads"
 nvim_archive="$download_dir/nvim-linux-x86_64-$NEOVIM_VERSION.tar.gz"
@@ -50,6 +52,8 @@ ripgrep_archive="$download_dir/ripgrep-$RIPGREP_VERSION-x86_64-unknown-linux-mus
 [ -x "$nvim_bin" ] || { printf '%s\n' "error: pinned Neovim binary is missing" >&2; exit 1; }
 [ -x "$tree_sitter_bin" ] || { printf '%s\n' "error: tree-sitter CLI is missing" >&2; exit 1; }
 [ -x "$ripgrep_bin" ] || { printf '%s\n' "error: ripgrep is missing" >&2; exit 1; }
+[ -s "$install_manifest" ] || { printf '%s\n' "error: installed-file manifest is missing" >&2; exit 1; }
+[ -f "$install_marker" ] || { printf '%s\n' "error: installation ownership marker is missing" >&2; exit 1; }
 [ -f "$blink_fuzzy" ] || { printf '%s\n' "error: blink.cmp fuzzy matcher is missing" >&2; exit 1; }
 [ -f "$config_dir/.frozen-nvim-managed" ] || { printf '%s\n' "error: installed config marker is missing" >&2; exit 1; }
 [ -f "$nvim_archive" ] || { printf '%s\n' "error: cached Neovim archive is missing" >&2; exit 1; }
@@ -67,9 +71,18 @@ actual_ts=$($tree_sitter_bin --version | awk '{print $2}')
 actual_rg=$($ripgrep_bin --version | awk 'NR == 1 { print $2 }')
 [ "$actual_rg" = "$RIPGREP_VERSION" ] || { printf '%s\n' "error: expected ripgrep $RIPGREP_VERSION, got $actual_rg" >&2; exit 1; }
 
+case ":$PATH:" in
+  *":$data_dir/frozen-nvim/runtime-bin:"*)
+    printf '%s\n' "error: private ripgrep directory leaked into the parent shell PATH" >&2
+    exit 1
+    ;;
+esac
+
 FROZEN_VERIFY_CONFIG="$config_dir" "$nvim_cmd" --headless \
   "+lua assert(vim.fn.stdpath('config') == vim.env.FROZEN_VERIFY_CONFIG)" \
   "+lua assert(require('lazy.core.config').plugins.LazyVim == nil, 'LazyVim must not be a runtime plugin')" \
+  "+lua assert(vim.fn.exepath('rg') == '$ripgrep_bin', 'Neovim is not using private ripgrep')" \
+  "+lua assert(vim.fn.exepath('tree-sitter') ~= '$tree_sitter_bin', 'installation-only tree-sitter leaked into runtime PATH')" \
   "+lua assert(vim.wait(5000, function() return require('blink.cmp.fuzzy').implementation_type == 'rust' end, 20), 'blink.cmp Rust matcher did not load')" \
   "+lua local ok, err = pcall(dofile, vim.env.FROZEN_VERIFY_CONFIG .. '/lua/frozen/verify.lua'); if not ok then io.stderr:write(err .. '\n'); vim.cmd('cquit 1') end" \
   "+checkhealth lazy" \
