@@ -1,6 +1,11 @@
 -- Edit key strings here. Plugin configuration modules import this table.
 return {
-  files = { tree = "\\e", find = "\\ff", grep = "\\fg", new = "\\fn" },
+  files = {
+    tree = "\\e", find = "\\ff", grep = "\\fg", new = "\\fn",
+    open_tab = "t", open_split = "<C-s>", open_vsplit = "<C-v>",
+  },
+  buffers = { all = "\\ba", displayed = "\\bb", orphaned = "\\bo", modified = "\\bm" },
+  tabs = { rename = "\\tr" },
   git = {
     next_hunk = "]h",
     previous_hunk = "[h",

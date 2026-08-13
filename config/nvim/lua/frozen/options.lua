@@ -47,6 +47,7 @@ opt.laststatus = 3
 opt.list = true
 opt.mouse = "a"
 opt.number = true
+opt.numberwidth = 1
 opt.relativenumber = true
 opt.scrolloff = 4
 opt.shiftwidth = 2

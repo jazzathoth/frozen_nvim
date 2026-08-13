@@ -68,6 +68,32 @@ versions. Parser-list changes still require the parser installation procedure.
 These synchronization commands are development tools, not the distribution
 mechanism for a frozen release.
 
+## Buffer and tab navigation
+
+The optional interface features are controlled independently in
+`config/nvim/lua/frozen/settings/features.lua`. The default bindings are:
+
+- `\ba`: all normal listed buffers
+- `\bb`: displayed file buffers; Enter navigates to their existing tab/window
+- `\bo`: orphaned file buffers; Enter loads one in the originating editor window
+- `\bm`: modified file buffers; each entry states whether Enter navigates or loads
+- `\tr`: name the current real Neovim tab; an empty name restores its automatic label
+- In the file explorer, `t` switches to an existing tab displaying the file or
+  opens a new tab; `Ctrl-s` and `Ctrl-v` open horizontal and vertical splits
+
+Inside any buffer menu's result-list mode, `t` navigates to an existing tab or
+opens a new one, `Ctrl-s`/`Ctrl-v` open splits, and `dd` safely deletes the
+selected buffer. `Ctrl-x` also deletes from either the input or list. These
+single-letter actions do not apply while typing in the picker input. The top
+tab line contains real Neovim tabpages only;
+buffer names are not substituted for tabs. The bottom status line reports the
+number of modified buffers and how many of those are currently orphaned.
+
+The tab line uses the full terminal width and shortens every tab name as the
+number of tabs grows. It keeps all tabs visible while each name can retain at
+least four display cells; only under tighter space pressure may it elide distant
+tabs. The selected tab uses a different highlight from the other tabs.
+
 ## Frozen components
 
 - Neovim 0.12.4 official Linux x86_64 tarball
