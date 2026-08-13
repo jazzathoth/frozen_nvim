@@ -73,6 +73,9 @@ mechanism for a frozen release.
 The optional interface features are controlled independently in
 `config/nvim/lua/frozen/settings/features.lua`. The default bindings are:
 
+- `\ff`: find files in the project
+- `\fg`: search text in the project
+- `\xx`: show diagnostics for the current buffer; Enter jumps to a diagnostic
 - `\ba`: all normal listed buffers
 - `\bb`: displayed file buffers; Enter navigates to their existing tab/window
 - `\bo`: orphaned file buffers; Enter loads one in the originating editor window
@@ -82,12 +85,20 @@ The optional interface features are controlled independently in
   opens a new tab; `Ctrl-s` and `Ctrl-v` open horizontal and vertical splits
 
 Inside any buffer menu's result-list mode, `t` navigates to an existing tab or
-opens a new one, `Ctrl-s`/`Ctrl-v` open splits, and `dd` safely deletes the
-selected buffer. `Ctrl-x` also deletes from either the input or list. These
-single-letter actions do not apply while typing in the picker input. The top
-tab line contains real Neovim tabpages only;
+opens a new one, `Ctrl-s`/`Ctrl-v` open splits, and `d` safely deletes the
+selected buffer. The menus open in result-list mode; `/` or `i` focuses the
+search input. Enter or Escape finishes searching and returns to the list
+without opening anything, after which Enter, `t`, `d`, or a split command
+performs the selected action. The top tab line contains real Neovim tabpages only;
 buffer names are not substituted for tabs. The bottom status line reports the
 number of modified buffers and how many of those are currently orphaned.
+
+The file and text-search menus start in their search input. Enter or Escape
+finishes typing and moves to the result list without opening anything. In the
+list, Enter opens the result normally, `t` navigates to an existing tab showing
+that file or opens a new tab, and `Ctrl-s`/`Ctrl-v` open splits. The diagnostics
+menu is limited to the current buffer and retains its normal Enter-to-location
+behavior.
 
 The tab line uses the full terminal width and shortens every tab name as the
 number of tabs grows. It keeps all tabs visible while each name can retain at

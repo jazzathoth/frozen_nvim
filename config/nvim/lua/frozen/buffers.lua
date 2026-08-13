@@ -165,6 +165,7 @@ function M.open(kind)
   return Snacks.picker({
     source = "frozen_" .. kind .. "_buffers",
     title = titles[kind],
+    focus = "list",
     finder = function()
       return items(kind)
     end,
@@ -208,9 +209,12 @@ function M.open(kind)
     win = {
       input = {
         keys = {
-          ["<c-x>"] = { "bufdelete", mode = { "n", "i" } },
-          ["<c-s>"] = { "frozen_split", mode = { "n", "i" } },
-          ["<c-v>"] = { "frozen_vsplit", mode = { "n", "i" } },
+          ["<cr>"] = { "focus_list", mode = { "n", "i" } },
+          ["<esc>"] = { "focus_list", mode = { "n", "i" } },
+          ["<c-s>"] = false,
+          ["<c-t>"] = false,
+          ["<c-v>"] = false,
+          ["<c-x>"] = false,
         },
       },
       list = {
@@ -218,7 +222,7 @@ function M.open(kind)
           ["t"] = "frozen_tab",
           ["<c-s>"] = "frozen_split",
           ["<c-v>"] = "frozen_vsplit",
-          ["dd"] = "bufdelete",
+          ["d"] = "bufdelete",
         },
       },
     },

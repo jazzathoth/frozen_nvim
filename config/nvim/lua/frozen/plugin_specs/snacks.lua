@@ -13,11 +13,39 @@ else
   explorer_keys[keys.files.open_vsplit] = false
 end
 
+local function searchable_file_source()
+  return {
+    focus = "input",
+    win = {
+      input = {
+        keys = {
+          ["<cr>"] = { "focus_list", mode = { "n", "i" } },
+          ["<esc>"] = { "focus_list", mode = { "n", "i" } },
+          ["<c-s>"] = false,
+          ["<c-t>"] = false,
+          ["<c-v>"] = false,
+        },
+      },
+      list = {
+        keys = {
+          ["t"] = "tabdrop",
+          ["<c-s>"] = "edit_split",
+          ["<c-v>"] = "edit_vsplit",
+        },
+      },
+    },
+  }
+end
+
 local plugin_keys = {
   { keys.files.tree, function() Snacks.explorer() end, desc = "Project files" },
   { keys.files.find, function() Snacks.picker.files() end, desc = "Find files" },
   { keys.files.grep, function() Snacks.picker.grep() end, desc = "Search project" },
-  { keys.diagnostics.list, function() Snacks.picker.diagnostics() end, desc = "Diagnostics" },
+  {
+    keys.diagnostics.list,
+    function() Snacks.picker.diagnostics_buffer() end,
+    desc = "Current buffer diagnostics",
+  },
   { keys.terminal[1], function() Snacks.terminal() end, mode = { "n", "t" }, desc = "Terminal" },
   { keys.terminal[2], function() Snacks.terminal() end, mode = { "n", "t" }, desc = "Terminal keycode alias" },
 }
@@ -40,6 +68,8 @@ return {
         enabled = true,
         sources = {
           explorer = { win = { list = { keys = explorer_keys } } },
+          files = searchable_file_source(),
+          grep = searchable_file_source(),
         },
       },
       terminal = { enabled = true },
