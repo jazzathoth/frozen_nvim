@@ -34,11 +34,12 @@ return {
         group = vim.api.nvim_create_augroup("frozen_lsp_keys", { clear = true }),
         callback = function(event)
           local opts = { buffer = event.buf }
-          vim.keymap.set("n", keys.lsp.definition, vim.lsp.buf.definition, vim.tbl_extend("force", opts, { desc = "Definition" }))
+          vim.keymap.set("n", keys.lsp.definition, require("frozen.lsp_navigation").definition_tab, vim.tbl_extend("force", opts, { desc = "Definition in tab" }))
+          vim.keymap.set("n", keys.lsp.preview_definition, require("frozen.lsp_hover").definition, vim.tbl_extend("force", opts, { desc = "Preview definition information" }))
           vim.keymap.set("n", keys.lsp.references, vim.lsp.buf.references, vim.tbl_extend("force", opts, { desc = "References" }))
           vim.keymap.set("n", keys.lsp.rename, vim.lsp.buf.rename, vim.tbl_extend("force", opts, { desc = "Rename" }))
           vim.keymap.set({ "n", "x" }, keys.lsp.action, vim.lsp.buf.code_action, vim.tbl_extend("force", opts, { desc = "Code action" }))
-          vim.keymap.set("n", keys.lsp.hover, vim.lsp.buf.hover, vim.tbl_extend("force", opts, { desc = "Hover" }))
+          vim.keymap.set("n", keys.lsp.hover, require("frozen.lsp_hover").open, vim.tbl_extend("force", opts, { desc = "Symbol context" }))
         end,
       })
     end,

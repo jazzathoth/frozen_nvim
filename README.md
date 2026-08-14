@@ -76,6 +76,10 @@ The optional interface features are controlled independently in
 - `\ff`: find files in the project
 - `\fg`: search text in the project
 - `\xx`: show diagnostics for the current buffer; Enter jumps to a diagnostic
+- `K`: show the richest available hover information from the symbol, its
+  definition, or its type definition
+- `gd`: navigate to the definition's existing tab, or open it in a new tab;
+  `\cp` previews its signature and documentation in a compact float
 - `\ba`: all normal listed buffers
 - `\bb`: displayed file buffers; Enter navigates to their existing tab/window
 - `\bo`: orphaned file buffers; Enter loads one in the originating editor window

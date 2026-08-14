@@ -16,7 +16,10 @@ return {
   },
   windows = { left = "<C-h>", down = "<C-j>", up = "<C-k>", right = "<C-l>", split_below = "\\-", split_right = "\\|" },
   diagnostics = { line = "\\cd", next = "]d", previous = "[d", list = "\\xx" },
-  lsp = { definition = "gd", references = "gr", rename = "\\cr", action = "\\ca", hover = "K" },
+  lsp = {
+    definition = "gD", preview_definition = "gd", references = "gr",
+    rename = "\\cr", action = "\\ca", hover = "K",
+  },
   completion = { next = "<Tab>", previous = "<S-Tab>", accept = "<CR>", cancel = "<C-e>" },
   markdown = { toggle = "\\mt", preview = "\\mp" },
   format = "\\cf",
