@@ -71,6 +71,10 @@ function M.open()
   end
 
   local candidates = {}
+  local member_lines
+  local hover_finished = false
+  local members_finished = true
+  local rendered = false
 
   local function add_candidate(result)
     local lines = hover_lines(result)
@@ -80,18 +84,26 @@ function M.open()
   end
 
   local function render()
+    if rendered or not hover_finished or not members_finished then
+      return
+    end
+    rendered = true
     if vim.api.nvim_get_current_buf() ~= bufnr
       or vim.api.nvim_get_current_win() ~= winid
       or not vim.deep_equal(vim.api.nvim_win_get_cursor(winid), cursor)
     then
       return
     end
-    if #candidates == 0 then
+    if #candidates == 0 and not member_lines then
       vim.notify("No symbol information available", vim.log.levels.INFO)
       return
     end
     table.sort(candidates, function(left, right) return score(left) > score(right) end)
-    vim.lsp.util.open_floating_preview(candidates[1], "markdown", {
+    local output = vim.deepcopy(candidates[1] or {})
+    if member_lines then
+      vim.list_extend(output, member_lines)
+    end
+    vim.lsp.util.open_floating_preview(output, "markdown", {
       border = "rounded",
       focus_id = "frozen_symbol_context",
       max_width = 100,
@@ -148,7 +160,18 @@ function M.open()
   end
 
   request("textDocument/hover", position, function(hover)
-    add_candidate(hover)
+    local direct_lines = hover_lines(hover)
+    if direct_lines then
+      table.insert(candidates, direct_lines)
+    end
+
+    members_finished = false
+    require("frozen.lsp_members").request(client, bufnr, winid, function(lines)
+      member_lines = lines
+      members_finished = true
+      render()
+    end)
+
     request_target_hovers("textDocument/definition", function()
       table.sort(candidates, function(left, right) return score(left) > score(right) end)
       local best = candidates[1]
@@ -156,8 +179,12 @@ function M.open()
       -- type in that case, but do not replace an actual function or type
       -- declaration with unrelated return-type information.
       if not best or (score(best) < 180 and not has_declaration(best)) then
-        request_target_hovers("textDocument/typeDefinition", render)
+        request_target_hovers("textDocument/typeDefinition", function()
+          hover_finished = true
+          render()
+        end)
       else
+        hover_finished = true
         render()
       end
     end)
