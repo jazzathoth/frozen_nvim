@@ -61,6 +61,8 @@ opt.splitbelow = true
 opt.splitright = true
 opt.tabstop = 2
 opt.termguicolors = true
+vim.cmd.colorscheme("wildcharm")
+vim.g.frozen_illuminate_background = true
 opt.timeoutlen = 1000
 opt.undofile = true
 opt.updatetime = 200
