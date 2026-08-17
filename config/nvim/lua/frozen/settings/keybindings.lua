@@ -20,6 +20,7 @@ return {
     definition = "gD", preview_definition = "gd", references = "gr",
     rename = "\\cr", action = "\\ca", hover = "K",
   },
+  illuminate = { next = "<A-n>", previous = "<A-N>" },
   completion = { next = "<Tab>", previous = "<S-Tab>", accept = "<CR>", cancel = "<C-e>" },
   markdown = { toggle = "\\mt", preview = "\\mp" },
   format = "\\cf",

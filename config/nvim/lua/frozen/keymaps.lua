@@ -20,3 +20,10 @@ end
 map("n", bindings.diagnostics.line, vim.diagnostic.open_float, { desc = "Line diagnostics" })
 map("n", bindings.diagnostics.next, diagnostic_jump(1), { desc = "Next diagnostic" })
 map("n", bindings.diagnostics.previous, diagnostic_jump(-1), { desc = "Previous diagnostic" })
+
+map("n", bindings.illuminate.next, function()
+  require("illuminate").goto_next_reference()
+end, { desc = "Next reference to symbol" })
+map("n", bindings.illuminate.previous, function()
+  require("illuminate").goto_prev_reference()
+end, { desc = "Previous reference to symbol" })

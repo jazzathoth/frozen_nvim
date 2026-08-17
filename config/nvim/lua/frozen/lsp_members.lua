@@ -37,12 +37,22 @@ local function completion_items(result)
 end
 
 local function useful_items(result)
+  local ignore_patterns = require("frozen.settings.member_access").ignore_patterns or {}
   local items = {}
   local seen = {}
   for _, item in ipairs(completion_items(result)) do
     local label = type(item.label) == "string" and item.label or nil
     local key = label and (label .. "\0" .. (item.detail or "")) or nil
-    if label and not excluded_kinds[item.kind] and not seen[key] then
+    local ignored = false
+    if label then
+      for _, pattern in ipairs(ignore_patterns) do
+        if label:find(pattern) then
+          ignored = true
+          break
+        end
+      end
+    end
+    if label and not ignored and not excluded_kinds[item.kind] and not seen[key] then
       seen[key] = true
       table.insert(items, item)
     end
@@ -193,7 +203,7 @@ local function probe(client, bufnr, row, insert_col, source_lines, operator, cal
   local character = vim.str_utfindex(
     lines[row + 1],
     client.offset_encoding,
-      completion_col,
+    completion_col,
     false
   )
 

@@ -72,8 +72,10 @@ function M.open()
 
   local candidates = {}
   local member_lines
+  local constructor_lines
   local hover_finished = false
   local members_finished = true
+  local constructor_finished = true
   local rendered = false
 
   local function add_candidate(result)
@@ -84,7 +86,7 @@ function M.open()
   end
 
   local function render()
-    if rendered or not hover_finished or not members_finished then
+    if rendered or not hover_finished or not members_finished or not constructor_finished then
       return
     end
     rendered = true
@@ -100,6 +102,9 @@ function M.open()
     end
     table.sort(candidates, function(left, right) return score(left) > score(right) end)
     local output = vim.deepcopy(candidates[1] or {})
+    if constructor_lines then
+      vim.list_extend(output, constructor_lines)
+    end
     if member_lines then
       vim.list_extend(output, member_lines)
     end
@@ -169,6 +174,14 @@ function M.open()
     require("frozen.lsp_members").request(client, bufnr, winid, function(lines)
       member_lines = lines
       members_finished = true
+      if member_lines then
+        constructor_finished = false
+        require("frozen.lsp_constructor").request(client, bufnr, winid, function(constructor)
+          constructor_lines = constructor
+          constructor_finished = true
+          render()
+        end)
+      end
       render()
     end)
 

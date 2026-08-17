@@ -30,5 +30,6 @@ return {
   { name = "tokyonight.nvim", url = "https://github.com/folke/tokyonight.nvim.git", commit = "cdc07ac78467a233fd62c493de29a17e0cf2b2b6" },
   { name = "trouble.nvim", url = "https://github.com/folke/trouble.nvim.git", commit = "bd67efe408d4816e25e8491cc5ad4088e708a69a" },
   { name = "ts-comments.nvim", url = "https://github.com/folke/ts-comments.nvim.git", commit = "a59d6092213447450191122c9346f309161504cb" },
+  { name = "vim-illuminate", url = "https://github.com/RRethy/vim-illuminate.git", commit = "91313e598ca62e110bc71535c49069b66b9883c9" },
   { name = "which-key.nvim", url = "https://github.com/folke/which-key.nvim.git", commit = "3aab2147e74890957785941f0c1ad87d0a44c15a" },
 }

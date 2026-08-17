@@ -14,6 +14,12 @@ return {
     "rust",
   },
 
+  -- Lua patterns matched against completion labels before they are displayed
+  -- in the compact member summary. This does not affect normal completion.
+  ignore_patterns = {
+    "^_",
+  },
+
   operators = {
     {
       operator = ".",
