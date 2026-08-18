@@ -5,4 +5,5 @@ return {
   named_tabs = true,
   explorer_open_actions = true,
   modified_buffer_status = true,
+  pane_labels = true,
 }

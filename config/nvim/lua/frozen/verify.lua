@@ -32,3 +32,37 @@ for _, parser in ipairs(require("frozen.parsers")) do
   file:close()
   assert(actual == expected, ("parser %s: expected %s, got %s"):format(parser, expected, actual))
 end
+
+-- Reproduce Neovim #40838: an out-of-range diagnostic attached before an
+-- unloaded file is read must not crash the underline handler during BufRead.
+local bounds_path = vim.fn.stdpath("config") .. "/init.lua"
+local bounds_buffer = vim.fn.bufadd(bounds_path)
+assert(not vim.api.nvim_buf_is_loaded(bounds_buffer), "diagnostic bounds test buffer is already loaded")
+local bounds_namespace = vim.api.nvim_create_namespace("frozen_verify_diagnostic_bounds")
+vim.diagnostic.set(bounds_namespace, bounds_buffer, {
+  {
+    lnum = 0,
+    col = 0,
+    end_lnum = 0,
+    end_col = 1,
+    severity = vim.diagnostic.severity.ERROR,
+    message = "valid diagnostic",
+    bufnr = bounds_buffer,
+  },
+  {
+    lnum = 100000,
+    col = 0,
+    end_lnum = 100000,
+    end_col = 1,
+    severity = vim.diagnostic.severity.ERROR,
+    message = "intentionally stale diagnostic",
+    bufnr = bounds_buffer,
+  },
+})
+vim.cmd("buffer " .. bounds_buffer)
+assert(vim.wait(1000, function()
+  local underline_namespace = vim.diagnostic.get_namespace(bounds_namespace).user_data.underline_ns
+  return underline_namespace
+    and #vim.api.nvim_buf_get_extmarks(bounds_buffer, underline_namespace, 0, -1, {}) > 0
+end, 10), "valid diagnostic underline was not drawn")
+vim.diagnostic.reset(bounds_namespace, bounds_buffer)
