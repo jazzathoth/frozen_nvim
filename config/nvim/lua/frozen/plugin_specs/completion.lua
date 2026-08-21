@@ -14,9 +14,15 @@ return {
         [keys.completion.accept] = {
           "select_and_accept",
           function()
-            -- Expand an empty pair onto three lines when completion did not
-            -- consume Enter.
-            return require("mini.pairs").cr()
+            local cr = require("mini.pairs").cr()
+            if cr == vim.keycode("<CR>") then
+              return cr
+            end
+
+            -- MiniPairs recognized an empty pair. Put its closing delimiter
+            -- on a separate line, ask the active language indenter to place
+            -- that line, then continue inserting on the line above it.
+            return vim.keycode("<CR><C-o>==<C-o>O")
           end,
         },
         [keys.completion.cancel] = { "cancel", "fallback" },

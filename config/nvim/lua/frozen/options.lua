@@ -3,6 +3,8 @@ vim.g.maplocalleader = "\\"
 
 local opt = vim.opt
 
+vim.o.exrc = true
+
 -- Use the desktop clipboard only when a matching display and provider exist.
 -- Otherwise y/p keep using Neovim's internal register without provider errors.
 local wayland_clipboard = vim.env.WAYLAND_DISPLAY
