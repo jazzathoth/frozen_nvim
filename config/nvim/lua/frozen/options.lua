@@ -52,6 +52,9 @@ opt.number = true
 opt.numberwidth = 1
 opt.relativenumber = true
 opt.scrolloff = 4
+-- Plugin sidebars such as Snacks Explorer cannot be reconstructed by a
+-- native Vim session; omitting blank windows prevents empty restored panes.
+opt.sessionoptions:remove("blank")
 opt.shiftwidth = 2
 opt.showmode = false
 opt.sidescrolloff = 8
